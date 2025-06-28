@@ -66,7 +66,8 @@ export const authService = {
   // Obter usuário atual
   async getCurrentUser() {
     const { data: { user }, error } = await supabase.auth.getUser()
-    if (error) throw error
+    // Return null if there's no active session instead of throwing an error
+    if (error) return null
     return user
   },
 
