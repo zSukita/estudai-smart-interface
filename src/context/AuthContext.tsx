@@ -54,9 +54,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(session?.user ?? null)
         setLoading(false)
 
-        if (event === 'SIGNED_IN') {
-          toast.success('Login realizado com sucesso!')
-        } else if (event === 'SIGNED_OUT') {
+        // Remover toast automático para evitar conflitos com redirecionamento manual
+        if (event === 'SIGNED_OUT') {
           toast.success('Logout realizado com sucesso!')
         }
       }
@@ -69,8 +68,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setLoading(true)
       await authService.signIn({ email, password })
+      // Não mostrar toast aqui, será mostrado na página que faz o redirecionamento
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao fazer login')
       throw error
     } finally {
       setLoading(false)

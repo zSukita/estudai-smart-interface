@@ -28,7 +28,8 @@ const Login = () => {
     
     try {
       await signIn(email, password);
-      navigate('/');
+      // Redirecionar para o dashboard após login bem-sucedido
+      navigate('/dashboard');
     } catch (error: any) {
       console.error('Erro no login:', error);
       
