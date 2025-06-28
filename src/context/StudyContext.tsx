@@ -5,37 +5,28 @@ interface Task {
   id: string;
   title: string;
   subject: string;
+  priority: 'high' | 'medium' | 'low';
+  estimatedTime: number;
   completed: boolean;
-  priority: 'low' | 'medium' | 'high';
-  estimatedTime: number; // em minutos
-  createdAt: Date;
 }
 
-interface StudySession {
-  id: string;
-  duration: number; // em minutos
-  subject: string;
-  completedAt: Date;
-  tasksCompleted: number;
+interface Timer {
+  workDuration: number;
+  breakDuration: number;
+  currentSession: 'work' | 'break';
+  isRunning: boolean;
+  timeLeft: number;
 }
 
 interface StudyContextType {
   tasks: Task[];
-  sessions: StudySession[];
-  currentTimer: {
-    isRunning: boolean;
-    timeLeft: number;
-    currentSession: 'work' | 'break';
-    workDuration: number;
-    breakDuration: number;
-  };
-  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
-  completeTask: (taskId: string) => void;
-  deleteTask: (taskId: string) => void;
+  currentTimer: Timer;
+  addTask: (task: Omit<Task, 'id'>) => void;
+  completeTask: (id: string) => void;
+  deleteTask: (id: string) => void;
   startTimer: () => void;
   pauseTimer: () => void;
   skipTimer: () => void;
-  setTimerDurations: (work: number, break_: number) => void;
 }
 
 const StudyContext = createContext<StudyContextType | undefined>(undefined);
@@ -52,77 +43,56 @@ export const StudyProvider = ({ children }: { children: ReactNode }) => {
   const [tasks, setTasks] = useState<Task[]>([
     {
       id: '1',
-      title: 'Revisar Matemática - Funções Quadráticas',
+      title: 'Revisar Matemática - Equações',
       subject: 'Matemática',
-      completed: false,
       priority: 'high',
       estimatedTime: 45,
-      createdAt: new Date()
+      completed: false,
     },
     {
       id: '2',
-      title: 'Ler capítulo 3 de História do Brasil',
-      subject: 'História',
-      completed: false,
+      title: 'Leitura - Capítulo 3',
+      subject: 'Literatura',
       priority: 'medium',
       estimatedTime: 30,
-      createdAt: new Date()
+      completed: false,
     },
     {
       id: '3',
-      title: 'Resolver exercícios de Física - Mecânica',
+      title: 'Exercícios de Física',
       subject: 'Física',
-      completed: true,
       priority: 'high',
       estimatedTime: 60,
-      createdAt: new Date()
-    }
-  ]);
-
-  const [sessions, setSessions] = useState<StudySession[]>([
-    {
-      id: '1',
-      duration: 25,
-      subject: 'Matemática',
-      completedAt: new Date(Date.now() - 3600000), // 1 hora atrás
-      tasksCompleted: 1
+      completed: true,
     },
-    {
-      id: '2',
-      duration: 50,
-      subject: 'Física',
-      completedAt: new Date(Date.now() - 7200000), // 2 horas atrás
-      tasksCompleted: 2
-    }
   ]);
 
-  const [currentTimer, setCurrentTimer] = useState({
-    isRunning: false,
-    timeLeft: 25 * 60, // 25 minutos em segundos
-    currentSession: 'work' as 'work' | 'break',
+  const [currentTimer, setCurrentTimer] = useState<Timer>({
     workDuration: 25,
-    breakDuration: 5
+    breakDuration: 5,
+    currentSession: 'work',
+    isRunning: false,
+    timeLeft: 25 * 60, // 25 minutes in seconds
   });
 
-  const addTask = (task: Omit<Task, 'id' | 'createdAt'>) => {
-    const newTask: Task = {
+  const addTask = (task: Omit<Task, 'id'>) => {
+    const newTask = {
       ...task,
       id: Date.now().toString(),
-      createdAt: new Date()
     };
-    setTasks(prev => [newTask, ...prev]);
+    setTasks(prev => [...prev, newTask]);
   };
 
-  const completeTask = (taskId: string) => {
+  const completeTask = (id: string) => {
     setTasks(prev => 
       prev.map(task => 
-        task.id === taskId ? { ...task, completed: !task.completed } : task
+        task.id === id ? { ...task, completed: !task.completed } : task
       )
     );
   };
 
-  const deleteTask = (taskId: string) => {
-    setTasks(prev => prev.filter(task => task.id !== taskId));
+  const deleteTask = (id: string) => {
+    setTasks(prev => prev.filter(task => task.id !== id));
   };
 
   const startTimer = () => {
@@ -136,34 +106,25 @@ export const StudyProvider = ({ children }: { children: ReactNode }) => {
   const skipTimer = () => {
     setCurrentTimer(prev => ({
       ...prev,
-      isRunning: false,
       currentSession: prev.currentSession === 'work' ? 'break' : 'work',
-      timeLeft: prev.currentSession === 'work' ? prev.breakDuration * 60 : prev.workDuration * 60
+      timeLeft: prev.currentSession === 'work' ? prev.breakDuration * 60 : prev.workDuration * 60,
+      isRunning: false,
     }));
   };
 
-  const setTimerDurations = (work: number, break_: number) => {
-    setCurrentTimer(prev => ({
-      ...prev,
-      workDuration: work,
-      breakDuration: break_,
-      timeLeft: prev.currentSession === 'work' ? work * 60 : break_ * 60
-    }));
+  const value = {
+    tasks,
+    currentTimer,
+    addTask,
+    completeTask,
+    deleteTask,
+    startTimer,
+    pauseTimer,
+    skipTimer,
   };
 
   return (
-    <StudyContext.Provider value={{
-      tasks,
-      sessions,
-      currentTimer,
-      addTask,
-      completeTask,
-      deleteTask,
-      startTimer,
-      pauseTimer,
-      skipTimer,
-      setTimerDurations
-    }}>
+    <StudyContext.Provider value={value}>
       {children}
     </StudyContext.Provider>
   );
