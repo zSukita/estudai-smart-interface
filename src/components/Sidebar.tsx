@@ -2,19 +2,23 @@
 import { Brain, Calendar, Clock, BarChart3, Settings, BookOpen, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
-  const [activeItem, setActiveItem] = useState('dashboard');
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Brain },
-    { id: 'calendar', label: 'Cronograma', icon: Calendar },
-    { id: 'timer', label: 'Pomodoro', icon: Clock },
-    { id: 'tasks', label: 'Tarefas', icon: BookOpen },
-    { id: 'goals', label: 'Metas', icon: Target },
-    { id: 'analytics', label: 'Relatórios', icon: BarChart3 },
-    { id: 'settings', label: 'Configurações', icon: Settings },
+    { id: 'dashboard', label: 'Dashboard', icon: Brain, path: '/' },
+    { id: 'calendar', label: 'Cronograma', icon: Calendar, path: '/calendar' },
+    { id: 'timer', label: 'Pomodoro', icon: Clock, path: '/pomodoro' },
+    { id: 'tasks', label: 'Tarefas', icon: BookOpen, path: '/tasks' },
+    { id: 'goals', label: 'Metas', icon: Target, path: '/goals' },
+    { id: 'analytics', label: 'Relatórios', icon: BarChart3, path: '/analytics' },
+    { id: 'settings', label: 'Configurações', icon: Settings, path: '/settings' },
   ];
+
+  const isActive = (path: string) => currentPath === path;
 
   return (
     <aside className="fixed top-0 left-0 z-40 w-64 h-screen bg-white border-r border-gray-200 shadow-soft animate-fade-in">
@@ -37,19 +41,19 @@ const Sidebar = () => {
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
-              <button
+              <Link
                 key={item.id}
-                onClick={() => setActiveItem(item.id)}
+                to={item.path}
                 className={cn(
                   "w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 hover:bg-gray-50",
-                  activeItem === item.id
+                  isActive(item.path)
                     ? "bg-primary/10 text-primary border border-primary/20"
                     : "text-gray-600 hover:text-gray-900"
                 )}
               >
                 <Icon className="w-5 h-5" />
                 <span className="font-medium">{item.label}</span>
-              </button>
+              </Link>
             );
           })}
         </nav>
