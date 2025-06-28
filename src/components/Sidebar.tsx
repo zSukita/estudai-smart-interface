@@ -11,7 +11,7 @@ const Sidebar = () => {
   const { user, signOut } = useAuth();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Brain, path: '/' },
+    { id: 'dashboard', label: 'Dashboard', icon: Brain, path: '/dashboard' },
     { id: 'calendar', label: 'Cronograma', icon: Calendar, path: '/calendar' },
     { id: 'timer', label: 'Pomodoro', icon: Clock, path: '/pomodoro' },
     { id: 'tasks', label: 'Tarefas', icon: BookOpen, path: '/tasks' },

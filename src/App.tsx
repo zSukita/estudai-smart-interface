@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { StudyProvider } from "./context/StudyContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -31,6 +32,9 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
+              {/* Página inicial pública */}
+              <Route path="/" element={<Landing />} />
+              
               {/* Rotas públicas */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
@@ -39,7 +43,7 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               
               {/* Rotas protegidas */}
-              <Route path="/" element={
+              <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Index />
                 </ProtectedRoute>
