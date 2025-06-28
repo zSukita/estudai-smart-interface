@@ -1,12 +1,14 @@
-
-import { Brain, Calendar, Clock, BarChart3, Settings, BookOpen, Target } from 'lucide-react';
+import { Brain, Calendar, Clock, BarChart3, Settings, BookOpen, Target, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
 
 const Sidebar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
+  const { user, signOut } = useAuth();
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Brain, path: '/' },
@@ -19,6 +21,14 @@ const Sidebar = () => {
   ];
 
   const isActive = (path: string) => currentPath === path;
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
 
   return (
     <aside className="fixed top-0 left-0 z-40 w-64 h-screen bg-white border-r border-gray-200 shadow-soft animate-fade-in">
@@ -60,15 +70,30 @@ const Sidebar = () => {
 
         {/* User Profile */}
         <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+          <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors mb-3">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-semibold text-sm">JS</span>
+              <span className="text-white font-semibold text-sm">
+                {user?.user_metadata?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+              </span>
             </div>
             <div className="flex-1">
-              <p className="font-medium text-gray-900">João Silva</p>
-              <p className="text-sm text-gray-500">Vestibulando</p>
+              <p className="font-medium text-gray-900">
+                {user?.user_metadata?.name || 'Usuário'}
+              </p>
+              <p className="text-sm text-gray-500 truncate">
+                {user?.email}
+              </p>
             </div>
           </div>
+          
+          <Button
+            onClick={handleSignOut}
+            variant="outline"
+            className="w-full flex items-center justify-center space-x-2 text-gray-600 hover:text-red-600 hover:border-red-200"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sair</span>
+          </Button>
         </div>
       </div>
     </aside>

@@ -1,19 +1,43 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Brain, Clock, ArrowLeft, Mail } from 'lucide-react';
+import { Brain, Clock, ArrowLeft, Mail, Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from '@/components/ui/sonner';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { resetPassword } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Password reset request:', { email });
-    setIsSubmitted(true);
+    
+    if (!email) {
+      toast.error('Por favor, digite seu email');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      await resetPassword(email);
+      setIsSubmitted(true);
+    } catch (error: any) {
+      console.error('Erro ao enviar email de recuperação:', error);
+      
+      if (error.message?.includes('User not found')) {
+        toast.error('Email não encontrado');
+      } else {
+        toast.error('Erro ao enviar email de recuperação');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -67,6 +91,7 @@ const ForgotPassword = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-teal-400 focus:ring-teal-400"
+                    disabled={isLoading}
                     required
                   />
                 </div>
@@ -74,9 +99,19 @@ const ForgotPassword = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-teal-500/25"
+                  disabled={isLoading}
                 >
-                  <Mail className="w-4 h-4 mr-2" />
-                  Enviar instruções
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4 mr-2" />
+                      Enviar instruções
+                    </>
+                  )}
                 </Button>
               </form>
             </>

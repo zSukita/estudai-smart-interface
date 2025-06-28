@@ -1,10 +1,11 @@
-
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Brain, Clock } from 'lucide-react';
+import { Eye, EyeOff, Brain, Clock, Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from '@/components/ui/sonner';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -15,11 +16,63 @@ const Signup = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Signup attempt:', formData);
-    // Aqui seria implementada a lógica de cadastro
+    
+    // Validações
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+      toast.error('Por favor, preencha todos os campos');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    if (!acceptedTerms) {
+      toast.error('Você deve aceitar os termos de uso');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      await signUp(formData.email, formData.password, formData.name);
+      
+      // Mostrar mensagem de sucesso e redirecionar para login
+      toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error('Erro no cadastro:', error);
+      
+      // Mensagens de erro mais amigáveis
+      if (error.message?.includes('User already registered')) {
+        toast.error('Este email já está cadastrado');
+      } else if (error.message?.includes('Password should be at least 6 characters')) {
+        toast.error('A senha deve ter pelo menos 6 caracteres');
+      } else if (error.message?.includes('Invalid email')) {
+        toast.error('Email inválido');
+      } else {
+        toast.error('Erro ao criar conta. Tente novamente.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -72,6 +125,7 @@ const Signup = () => {
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-teal-400 focus:ring-teal-400"
+                disabled={isLoading}
                 required
               />
             </div>
@@ -87,6 +141,7 @@ const Signup = () => {
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-teal-400 focus:ring-teal-400"
+                disabled={isLoading}
                 required
               />
             </div>
@@ -103,12 +158,14 @@ const Signup = () => {
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-teal-400 focus:ring-teal-400 pr-12"
+                  disabled={isLoading}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                  disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -127,12 +184,14 @@ const Signup = () => {
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-teal-400 focus:ring-teal-400 pr-12"
+                  disabled={isLoading}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                  disabled={isLoading}
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -143,7 +202,10 @@ const Signup = () => {
               <input 
                 type="checkbox" 
                 id="terms"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
                 className="mt-1 rounded border-white/20 bg-white/10 text-teal-400 focus:ring-teal-400"
+                disabled={isLoading}
                 required
               />
               <label htmlFor="terms" className="text-sm text-white/80">
@@ -161,8 +223,16 @@ const Signup = () => {
             <Button 
               type="submit" 
               className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-teal-500/25"
+              disabled={isLoading}
             >
-              Criar conta
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Criando conta...
+                </>
+              ) : (
+                'Criar conta'
+              )}
             </Button>
           </form>
 
@@ -187,12 +257,14 @@ const Signup = () => {
               <Button 
                 variant="outline" 
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20 transition-colors"
+                disabled={isLoading}
               >
                 Google
               </Button>
               <Button 
                 variant="outline" 
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20 transition-colors"
+                disabled={isLoading}
               >
                 Facebook
               </Button>

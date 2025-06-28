@@ -1,20 +1,48 @@
-
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Brain, Clock } from 'lucide-react';
+import { Eye, EyeOff, Brain, Clock, Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from '@/components/ui/sonner';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', { email, password });
-    // Aqui seria implementada a lógica de login
+    
+    if (!email || !password) {
+      toast.error('Por favor, preencha todos os campos');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      await signIn(email, password);
+      navigate('/');
+    } catch (error: any) {
+      console.error('Erro no login:', error);
+      
+      // Mensagens de erro mais amigáveis
+      if (error.message?.includes('Invalid login credentials')) {
+        toast.error('Email ou senha incorretos');
+      } else if (error.message?.includes('Email not confirmed')) {
+        toast.error('Por favor, confirme seu email antes de fazer login');
+      } else {
+        toast.error('Erro ao fazer login. Tente novamente.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -64,6 +92,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-teal-400 focus:ring-teal-400"
+                disabled={isLoading}
                 required
               />
             </div>
@@ -80,12 +109,14 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-teal-400 focus:ring-teal-400 pr-12"
+                  disabled={isLoading}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                  disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -97,6 +128,7 @@ const Login = () => {
                 <input 
                   type="checkbox" 
                   className="mr-2 rounded border-white/20 bg-white/10 text-teal-400 focus:ring-teal-400"
+                  disabled={isLoading}
                 />
                 Lembrar-me
               </label>
@@ -111,8 +143,16 @@ const Login = () => {
             <Button 
               type="submit" 
               className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-teal-500/25"
+              disabled={isLoading}
             >
-              Entrar
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Entrando...
+                </>
+              ) : (
+                'Entrar'
+              )}
             </Button>
           </form>
 
@@ -137,12 +177,14 @@ const Login = () => {
               <Button 
                 variant="outline" 
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20 transition-colors"
+                disabled={isLoading}
               >
                 Google
               </Button>
               <Button 
                 variant="outline" 
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20 transition-colors"
+                disabled={isLoading}
               >
                 Facebook
               </Button>
